@@ -16,6 +16,30 @@ class FeatureVector:
     timestamp_ns: int
     raw_features: Dict[str, float]
     normalized_features: Dict[str, float]
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+=======
+    context: Dict[str, object]
+>>>>>>> theirs
+=======
+    context: Dict[str, object]
+>>>>>>> theirs
+=======
+    context: Dict[str, object]
+>>>>>>> theirs
+=======
+    context: Dict[str, object]
+>>>>>>> theirs
+=======
+    context: Dict[str, object]
+>>>>>>> theirs
+=======
+    context: Dict[str, object]
+>>>>>>> theirs
 
 
 class SlidingWindowFeatureEngine:
@@ -29,6 +53,30 @@ class SlidingWindowFeatureEngine:
             "byte_transfer_rate": {"mean": 4096.0, "std": 2048.0},
             "interval_variance": {"mean": 1e12, "std": 5e11},
             "high_risk_port_ratio": {"mean": 0.2, "std": 0.2},
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+=======
+            "lineage_depth": {"mean": 2.0, "std": 1.0},
+>>>>>>> theirs
+=======
+            "lineage_depth": {"mean": 2.0, "std": 1.0},
+>>>>>>> theirs
+=======
+            "lineage_depth": {"mean": 2.0, "std": 1.0},
+>>>>>>> theirs
+=======
+            "lineage_depth": {"mean": 2.0, "std": 1.0},
+>>>>>>> theirs
+=======
+            "lineage_depth": {"mean": 2.0, "std": 1.0},
+>>>>>>> theirs
+=======
+            "lineage_depth": {"mean": 2.0, "std": 1.0},
+>>>>>>> theirs
         }
         self.high_risk_ports = {22, 23, 25, 53, 135, 139, 445, 3389, 4444, 8080}
 
@@ -58,12 +106,60 @@ class SlidingWindowFeatureEngine:
         intervals = [b - a for a, b in zip(timestamps, timestamps[1:])]
         variance = self._variance(intervals)
         high_risk_events = sum(1 for e in events if int(e.get("destination_port", 0)) in self.high_risk_ports)
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+=======
+        lineage_depth = float(len(events[-1].get("lineage", [])))
+>>>>>>> theirs
+=======
+        lineage_depth = float(len(events[-1].get("lineage", [])))
+>>>>>>> theirs
+=======
+        lineage_depth = float(len(events[-1].get("lineage", [])))
+>>>>>>> theirs
+=======
+        lineage_depth = float(len(events[-1].get("lineage", [])))
+>>>>>>> theirs
+=======
+        lineage_depth = float(len(events[-1].get("lineage", [])))
+>>>>>>> theirs
+=======
+        lineage_depth = float(len(events[-1].get("lineage", [])))
+>>>>>>> theirs
         raw = {
             "connection_frequency": len(events) / max(window_ns / 1_000_000_000, 1e-6),
             "unique_ip_count": float(len(unique_ips)),
             "byte_transfer_rate": bytes_total / max(window_ns / 1_000_000_000, 1e-6),
             "interval_variance": variance,
             "high_risk_port_ratio": high_risk_events / len(events),
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+=======
+            "lineage_depth": lineage_depth,
+>>>>>>> theirs
+=======
+            "lineage_depth": lineage_depth,
+>>>>>>> theirs
+=======
+            "lineage_depth": lineage_depth,
+>>>>>>> theirs
+=======
+            "lineage_depth": lineage_depth,
+>>>>>>> theirs
+=======
+            "lineage_depth": lineage_depth,
+>>>>>>> theirs
+=======
+            "lineage_depth": lineage_depth,
+>>>>>>> theirs
         }
         normalized = {key: self._normalize(key, value) for key, value in raw.items()}
         return FeatureVector(
@@ -72,6 +168,44 @@ class SlidingWindowFeatureEngine:
             timestamp_ns=int(time.time_ns()),
             raw_features=raw,
             normalized_features=normalized,
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+=======
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+            context={
+                "ppid": events[-1].get("ppid", 0),
+                "lineage": events[-1].get("lineage", []),
+                "cmdline": events[-1].get("cmdline", ""),
+            },
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
         )
 
     @staticmethod

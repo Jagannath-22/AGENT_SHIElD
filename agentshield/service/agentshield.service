@@ -16,7 +16,31 @@ CapabilityBoundingSet=CAP_BPF CAP_NET_ADMIN CAP_SYS_ADMIN CAP_KILL
 NoNewPrivileges=true
 ProtectSystem=strict
 ProtectHome=true
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
 ReadWritePaths=/opt/agentshield/agentshield/logs
+=======
+ReadWritePaths=/opt/agentshield/agentshield/logs /opt/agentshield/agentshield/config
+>>>>>>> theirs
+=======
+ReadWritePaths=/opt/agentshield/agentshield/logs /opt/agentshield/agentshield/config
+>>>>>>> theirs
+=======
+ReadWritePaths=/opt/agentshield/agentshield/logs /opt/agentshield/agentshield/config
+>>>>>>> theirs
+=======
+ReadWritePaths=/opt/agentshield/agentshield/logs /opt/agentshield/agentshield/config
+>>>>>>> theirs
+=======
+ReadWritePaths=/opt/agentshield/agentshield/logs /opt/agentshield/agentshield/config
+>>>>>>> theirs
+=======
+ReadWritePaths=/opt/agentshield/agentshield/logs /opt/agentshield/agentshield/config
+>>>>>>> theirs
 
 [Install]
 WantedBy=multi-user.target

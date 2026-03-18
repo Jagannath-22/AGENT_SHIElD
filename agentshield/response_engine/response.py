@@ -2,6 +2,30 @@
 
 from __future__ import annotations
 
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+=======
+import hashlib
+>>>>>>> theirs
+=======
+import hashlib
+>>>>>>> theirs
+=======
+import hashlib
+>>>>>>> theirs
+=======
+import hashlib
+>>>>>>> theirs
+=======
+import hashlib
+>>>>>>> theirs
+=======
+import hashlib
+>>>>>>> theirs
 import json
 import logging
 import os
@@ -21,15 +45,79 @@ class ResponseEngine:
         self.webhook_url = webhook_url
         self.audit_log.parent.mkdir(parents=True, exist_ok=True)
 
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
     def execute(self, decision, feature_vector, inference: dict, latest_event: dict) -> None:
+=======
+    def execute(self, decision, feature_vector, inference: dict, latest_event: dict, signature_match) -> None:
+>>>>>>> theirs
+=======
+    def execute(self, decision, feature_vector, inference: dict, latest_event: dict, signature_match) -> None:
+>>>>>>> theirs
+=======
+    def execute(self, decision, feature_vector, inference: dict, latest_event: dict, signature_match) -> None:
+>>>>>>> theirs
+=======
+    def execute(self, decision, feature_vector, inference: dict, latest_event: dict, signature_match) -> None:
+>>>>>>> theirs
+=======
+    def execute(self, decision, feature_vector, inference: dict, latest_event: dict, signature_match) -> None:
+>>>>>>> theirs
+=======
+    def execute(self, decision, feature_vector, inference: dict, latest_event: dict, signature_match) -> None:
+>>>>>>> theirs
         record = {
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "decision": asdict(decision),
             "pid": feature_vector.pid,
             "process_name": feature_vector.process_name,
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
             "inference": inference,
             "latest_event": latest_event,
         }
+=======
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+            "context": feature_vector.context,
+            "inference": inference,
+            "signature_detected": signature_match.detected,
+            "signature_reasons": signature_match.reasons,
+            "latest_event": latest_event,
+        }
+        record["integrity_sha256"] = hashlib.sha256(json.dumps(record, sort_keys=True).encode("utf-8")).hexdigest()
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
         self._append_audit(record)
         self._alert(record)
         if decision.action == "kill":

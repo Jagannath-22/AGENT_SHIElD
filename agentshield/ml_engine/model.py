@@ -1,4 +1,28 @@
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
 """Isolation Forest wrapper with a dependency-free fallback implementation."""
+=======
+"""Isolation Forest wrapper with drift-aware fallback support."""
+>>>>>>> theirs
+=======
+"""Isolation Forest wrapper with drift-aware fallback support."""
+>>>>>>> theirs
+=======
+"""Isolation Forest wrapper with drift-aware fallback support."""
+>>>>>>> theirs
+=======
+"""Isolation Forest wrapper with drift-aware fallback support."""
+>>>>>>> theirs
+=======
+"""Isolation Forest wrapper with drift-aware fallback support."""
+>>>>>>> theirs
+=======
+"""Isolation Forest wrapper with drift-aware fallback support."""
+>>>>>>> theirs
 
 from __future__ import annotations
 
@@ -31,6 +55,48 @@ FEATURE_ORDER = [
     "byte_transfer_rate",
     "interval_variance",
     "high_risk_port_ratio",
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+=======
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+    "lineage_depth",
+]
+BOOTSTRAP_BASELINE = [
+    [8.0, 2.0, 2048.0, 8.0e10, 0.1, 2.0],
+    [10.0, 3.0, 4096.0, 1.0e11, 0.2, 2.0],
+    [12.0, 4.0, 5120.0, 1.2e11, 0.15, 3.0],
+    [6.0, 2.0, 1024.0, 6.0e10, 0.05, 1.0],
+    [14.0, 5.0, 6144.0, 1.4e11, 0.3, 3.0],
+    [7.0, 2.0, 1536.0, 7.0e10, 0.1, 2.0],
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
 ]
 
 
@@ -115,6 +181,12 @@ class AgentShieldModel:
 
     def _bootstrap_model(self) -> None:
         if self.model_path.exists():
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
             LOGGER.info("Loading trained model from %s", self.model_path)
             self.model = self._load_model(self.model_path)
             return
@@ -131,6 +203,54 @@ class AgentShieldModel:
         self.model.fit(baseline)
         self._save_model(self.model_path)
 
+=======
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+            try:
+                LOGGER.info("Loading trained model from %s", self.model_path)
+                self.model = self._load_model(self.model_path)
+                self._validate_model_shape()
+                return
+            except Exception as exc:
+                LOGGER.warning("Stored model incompatible or unreadable (%s); rebuilding bootstrap model", exc)
+        LOGGER.info("Training bootstrap isolation forest model")
+        self.model = self._new_model()
+        self.model.fit(BOOTSTRAP_BASELINE)
+        self._save_model(self.model_path)
+
+    def _validate_model_shape(self) -> None:
+        if self.model is None:
+            raise RuntimeError("missing model")
+        probe = [[row for row in BOOTSTRAP_BASELINE[0]]]
+        if np is not None and SklearnIsolationForest is not None and hasattr(self.model, "decision_function"):
+            self.model.decision_function(np.array(probe))
+        else:
+            self.model.decision_function(probe)
+
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
     def _new_model(self):
         if SklearnIsolationForest is not None and np is not None:
             return SklearnIsolationForest(n_estimators=200, contamination=self.contamination, random_state=42)

@@ -1,5 +1,11 @@
 # AgentShield – Autonomous Agent-Driven Kernel-Level Network Defense System
 
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
 AgentShield is a production-oriented prototype that captures kernel/network behavior with eBPF, aggregates telemetry into behavioral windows, scores behavior with an Isolation Forest model, and automatically responds with alerts or process termination.
 
 ## Architecture
@@ -158,12 +164,159 @@ decision_engine = DecisionEngine(anomaly_threshold=0.2)
 events = [
     {"timestamp_ns": 1, "pid": 555, "uid": 1000, "event_type": "connect", "process_name": "python", "destination_ip": "10.0.0.1", "destination_port": 4444, "size": 2048},
     {"timestamp_ns": 2_000_000_000, "pid": 555, "uid": 1000, "event_type": "sendto", "process_name": "python", "destination_ip": "10.0.0.2", "destination_port": 4444, "size": 4096},
+=======
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+AgentShield is an industry-oriented Linux defense agent that captures low-level process/network behavior, enriches it with process context, scores it with hybrid ML + signature logic, and autonomously reacts with audit logging, alerts, and optional process termination.
+
+## What's New in This Upgrade
+
+- YAML-driven configuration with hot-reload-aware config management.
+- Hybrid signature + anomaly detection.
+- Structured JSON event and metrics logging.
+- Streamlit dashboard for live visibility.
+- New libbpf CO-RE eBPF path with ring-buffer transport, while preserving the BCC fallback path.
+- Feature enrichment with PPID, lineage, and command line context.
+- Drift detection through anomaly-score mean tracking.
+
+## Updated Architecture
+
+### 1. Config System (`agentshield/config/`)
+The runtime is now config-driven through `config.yaml`, loaded by `ConfigManager`, with support for defaulting and reload-on-change behavior.
+
+### 2. eBPF Paths
+- `agentshield/ebpf/`: existing BCC path for compatibility.
+- `agentshield/ebpf_core/`: new libbpf CO-RE path using a ring buffer and build tooling.
+
+### 3. Collector
+The collector now selects CO-RE or BCC based on configuration, enriches events with PPID/cmdline/lineage, and writes structured JSON telemetry logs.
+
+### 4. Feature + ML
+The feature engine now includes lineage depth. The ML engine preserves the Isolation Forest pipeline and supports drift-aware metrics analysis around inference.
+
+### 5. Signature + Decision
+Signature rules detect reverse-shell ports, suspicious IP ranges, rapid connection bursts, and exfiltration rates. Decision logic now combines signature hits with anomaly scores while respecting protected processes and PIDs.
+
+### 6. Response + Observability
+Response records now include integrity hashes. Metrics capture event rate, anomaly rate, action counts, queue drops, and drift warnings.
+
+### 7. Dashboard
+A Streamlit dashboard shows recent events, incidents, and metrics directly from JSONL logs.
+
+## Configuration
+
+Default config file: `agentshield/config/config.yaml`
+
+```yaml
+anomaly_threshold: 0.2
+kill_process: true
+use_core_ebpf: false
+log_level: INFO
+```
+
+## Running AgentShield
+
+### Standard runtime
+
+```bash
+python3 main.py
+```
+
+### Dashboard
+
+```bash
+streamlit run agentshield/dashboard/app.py
+```
+
+## Building the CO-RE libbpf Path
+
+Install prerequisites on Linux:
+
+```bash
+sudo apt-get update
+sudo apt-get install -y clang llvm libbpf-dev libelf-dev zlib1g-dev bpftool gcc make linux-headers-$(uname -r)
+```
+
+Build the new CO-RE assets:
+
+```bash
+cd agentshield/ebpf_core
+make
+```
+
+This generates:
+- `vmlinux.h`
+- `monitor.bpf.o`
+- `monitor.skel.h`
+- `loader`
+
+Then set `use_core_ebpf: true` in `agentshield/config/config.yaml`.
+
+## Backward Compatibility
+
+- If `use_core_ebpf: false`, AgentShield uses the original BCC path.
+- If either BPF loader path is unavailable, AgentShield falls back to synthetic telemetry mode.
+- If `scikit-learn` is unavailable, AgentShield uses the built-in fallback Isolation Forest implementation.
+
+## Testing
+
+### Config + signature + decision smoke test
+
+```bash
+python3 - <<'PY'
+from agentshield.config.settings import ConfigManager
+from agentshield.decision_engine.decision import DecisionEngine
+from agentshield.feature_engine.features import SlidingWindowFeatureEngine
+from agentshield.ml_engine.model import AgentShieldModel
+from agentshield.observability.metrics import MetricsTracker
+from agentshield.signature_engine.signatures import SignatureEngine
+
+config = ConfigManager().load(force=True)
+metrics = MetricsTracker()
+engine = SlidingWindowFeatureEngine(window_seconds=60, min_events=2)
+model = AgentShieldModel()
+signatures = SignatureEngine(config)
+decisions = DecisionEngine(config)
+
+events = [
+    {"timestamp_ns": 1, "pid": 555, "uid": 1000, "ppid": 123, "event_type": "connect", "process_name": "python", "destination_ip": "10.10.10.5", "destination_port": 4444, "size": 2048, "lineage": ["bash", "python"], "cmdline": "python reverse.py"},
+    {"timestamp_ns": 2_000_000_000, "pid": 555, "uid": 1000, "ppid": 123, "event_type": "sendto", "process_name": "python", "destination_ip": "10.10.10.8", "destination_port": 4444, "size": 4096, "lineage": ["bash", "python"], "cmdline": "python reverse.py"},
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
 ]
 feature = None
 for event in events:
     feature = engine.ingest(event)
 assert feature is not None
 inference = model.infer(feature.normalized_features, feature.raw_features)
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
 decision = decision_engine.evaluate(feature, inference, events[-1])
 print({"inference": inference, "decision": decision})
 PY
@@ -192,3 +345,56 @@ git push origin <current-branch>
 ```
 
 Deployment to your GitHub repository (`https://github.com/Jagannath-22/AGENT_SHIElD`) still requires valid local Git credentials or a configured deploy key/token in the execution environment.
+=======
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+signature = signatures.evaluate(events[-1], feature)
+decision = decisions.evaluate(feature, inference, events[-1], signature)
+metrics.record_inference(inference["anomaly_score"], inference["label"], decision.action)
+print({"inference": inference, "signature": signature, "decision": decision, "metrics": metrics.snapshot()})
+PY
+```
+
+### Runtime smoke test
+
+```bash
+timeout 5 python3 main.py
+```
+
+### Dashboard smoke test
+
+```bash
+python3 -m compileall agentshield main.py
+```
+
+## Push / Deploy
+
+```bash
+git push origin <branch>
+```
+
+If your environment blocks GitHub or lacks credentials, push from a developer workstation with repository access.
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+<<<<<<< ours
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
+=======
+>>>>>>> theirs
