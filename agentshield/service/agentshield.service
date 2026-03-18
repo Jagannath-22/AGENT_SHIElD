@@ -1,0 +1,22 @@
+[Unit]
+Description=AgentShield Autonomous Kernel-Level Network Defense
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+WorkingDirectory=/opt/agentshield
+ExecStart=/usr/bin/python3 /opt/agentshield/main.py
+Restart=on-failure
+RestartSec=5
+AmbientCapabilities=CAP_BPF CAP_NET_ADMIN CAP_SYS_ADMIN CAP_KILL
+CapabilityBoundingSet=CAP_BPF CAP_NET_ADMIN CAP_SYS_ADMIN CAP_KILL
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/agentshield/agentshield/logs
+
+[Install]
+WantedBy=multi-user.target
