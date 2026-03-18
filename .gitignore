@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+agentshield/logs/*.log
+agentshield/logs/*.jsonl
+agentshield/ml_engine/*.joblib
+agentshield/ebpf_core/vmlinux.h
+agentshield/ebpf_core/monitor.skel.h
+agentshield/ebpf_core/monitor.bpf.o
+agentshield/ebpf_core/loader

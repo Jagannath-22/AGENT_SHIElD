@@ -1,0 +1,37 @@
+anomaly_threshold: 0.2
+kill_process: true
+use_core_ebpf: false
+log_level: INFO
+webhook_url: null
+collector_poll_interval: 0.1
+window_seconds: 60
+min_events: 5
+metrics_interval: 10
+protected_pids:
+  - 1
+protected_processes:
+  - systemd
+  - sshd
+  - docker
+  - dockerd
+  - containerd
+  - init
+whitelisted_processes:
+  - systemd
+  - sshd
+  - docker
+  - dockerd
+  - containerd
+  - init
+signature_rules:
+  reverse_shell_ports:
+    - 4444
+    - 5555
+  suspicious_cidrs:
+    - 10.10.10.0/24
+    - 172.16.250.0/24
+  rapid_connection_threshold: 20
+  exfil_byte_rate_threshold: 100000
+core_ebpf:
+  loader_path: ./agentshield/ebpf_core/loader
+  object_path: ./agentshield/ebpf_core/monitor.bpf.o
