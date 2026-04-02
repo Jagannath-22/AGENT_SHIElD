@@ -26,6 +26,7 @@ class MetricsSnapshot:
     anomaly_rate: float
     score_mean: float
     drift_detected: bool
+    retrain_recommended: bool
 
 
 class MetricsTracker:
@@ -74,11 +75,16 @@ class MetricsTracker:
             anomaly_rate=self.anomalies / max(self.events_seen, 1),
             score_mean=score_mean,
             drift_detected=drift_detected,
+            retrain_recommended=drift_detected,
         )
 
     def flush(self) -> None:
         snapshot = self.snapshot()
         if snapshot.drift_detected:
-            LOGGER.warning("Anomaly score drift detected; current_mean=%s reference_mean=%s", snapshot.score_mean, self.reference_mean)
+            LOGGER.warning(
+                "Anomaly score drift detected; current_mean=%s reference_mean=%s retraining_recommended=true",
+                snapshot.score_mean,
+                self.reference_mean,
+            )
         with self.output_path.open("a", encoding="utf-8") as handle:
             handle.write(json.dumps(asdict(snapshot), sort_keys=True) + "\n")

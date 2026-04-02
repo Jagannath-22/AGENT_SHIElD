@@ -1,35 +1,7 @@
 # Optional runtime packages. AgentShield falls back gracefully when unavailable.
-bcc>=0.28.0
 numpy>=1.26.0
 scikit-learn>=1.5.0
 joblib>=1.4.0
-<<<<<<< ours
-<<<<<<< ours
-<<<<<<< ours
-<<<<<<< ours
-<<<<<<< ours
-<<<<<<< ours
-=======
 PyYAML>=6.0.0
 streamlit>=1.37.0
->>>>>>> theirs
-=======
-PyYAML>=6.0.0
-streamlit>=1.37.0
->>>>>>> theirs
-=======
-PyYAML>=6.0.0
-streamlit>=1.37.0
->>>>>>> theirs
-=======
-PyYAML>=6.0.0
-streamlit>=1.37.0
->>>>>>> theirs
-=======
-PyYAML>=6.0.0
-streamlit>=1.37.0
->>>>>>> theirs
-=======
-PyYAML>=6.0.0
-streamlit>=1.37.0
->>>>>>> theirs
+pandas>=2.2.0

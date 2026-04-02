@@ -9,14 +9,16 @@ char LICENSE[] SEC("license") = "GPL";
 #define AF_INET_VALUE 2
 #define AF_INET6_VALUE 10
 
-enum event_type {
+enum event_type
+{
     EVENT_EXECVE = 1,
     EVENT_CONNECT = 2,
     EVENT_SENDTO = 3,
     EVENT_RECVFROM = 4,
 };
 
-struct net_event_t {
+struct net_event_t
+{
     __u64 timestamp_ns;
     __u32 pid;
     __u32 uid;
@@ -30,16 +32,32 @@ struct net_event_t {
     char comm[TASK_COMM_LEN];
 };
 
-struct {
+struct
+{
     __uint(type, BPF_MAP_TYPE_RINGBUF);
     __uint(max_entries, 1 << 24);
 } events SEC(".maps");
+
+struct
+{
+    __uint(type, BPF_MAP_TYPE_ARRAY);
+    __uint(max_entries, 1);
+    __type(key, __u32);
+    __type(value, __u64);
+} drop_stats SEC(".maps");
 
 static __always_inline int submit_event(__u32 event_type, __u32 size, __u32 dst_ip4, const __u8 *dst_ip6, __u16 dst_port, __u32 ip_version)
 {
     struct task_struct *task = (struct task_struct *)bpf_get_current_task_btf();
     struct net_event_t *event = bpf_ringbuf_reserve(&events, sizeof(*event), 0);
-    if (!event) {
+    if (!event)
+    {
+        __u32 key = 0;
+        __u64 *drop_counter = bpf_map_lookup_elem(&drop_stats, &key);
+        if (drop_counter)
+        {
+            __sync_fetch_and_add(drop_counter, 1);
+        }
         return 0;
     }
     event->timestamp_ns = bpf_ktime_get_ns();
@@ -52,7 +70,8 @@ static __always_inline int submit_event(__u32 event_type, __u32 size, __u32 dst_
     event->dst_port = dst_port;
     event->size = size;
     bpf_get_current_comm(&event->comm, sizeof(event->comm));
-    if (dst_ip6) {
+    if (dst_ip6)
+    {
         __builtin_memcpy(event->dst_ip6, dst_ip6, sizeof(event->dst_ip6));
     }
     bpf_ringbuf_submit(event, 0);
@@ -70,16 +89,19 @@ int handle_connect(struct trace_event_raw_sys_enter *ctx)
 {
     struct sockaddr *uservaddr = (struct sockaddr *)ctx->args[1];
     sa_family_t family = 0;
-    if (!uservaddr) {
+    if (!uservaddr)
+    {
         return 0;
     }
     bpf_probe_read_user(&family, sizeof(family), &uservaddr->sa_family);
-    if (family == AF_INET_VALUE) {
+    if (family == AF_INET_VALUE)
+    {
         struct sockaddr_in sa = {};
         bpf_probe_read_user(&sa, sizeof(sa), uservaddr);
         return submit_event(EVENT_CONNECT, 0, sa.sin_addr.s_addr, 0, bpf_ntohs(sa.sin_port), AF_INET_VALUE);
     }
-    if (family == AF_INET6_VALUE) {
+    if (family == AF_INET6_VALUE)
+    {
         struct sockaddr_in6 sa6 = {};
         bpf_probe_read_user(&sa6, sizeof(sa6), uservaddr);
         return submit_event(EVENT_CONNECT, 0, 0, sa6.sin6_addr.in6_u.u6_addr8, bpf_ntohs(sa6.sin6_port), AF_INET6_VALUE);

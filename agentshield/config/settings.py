@@ -1,4 +1,4 @@
-"""YAML-backed configuration loader with safe defaults and hot reload support."""
+"""YAML-backed configuration loader with validation and hot reload support."""
 
 from __future__ import annotations
 
@@ -24,17 +24,21 @@ class SignatureRuleConfig:
     suspicious_cidrs: List[str] = field(default_factory=list)
     rapid_connection_threshold: int = 20
     exfil_byte_rate_threshold: int = 100000
+    dos_connection_threshold: int = 60
+    dos_unique_ip_threshold: int = 25
+    dos_byte_rate_threshold: int = 250000
 
 
 @dataclass
 class CoreEbpfConfig:
     loader_path: str = "./agentshield/ebpf_core/loader"
     object_path: str = "./agentshield/ebpf_core/monitor.bpf.o"
+    expected_sha256: Optional[str] = None
 
 
 @dataclass
 class AgentShieldConfig:
-    anomaly_threshold: float = 0.2
+    anomaly_threshold: float = 0.65
     kill_process: bool = True
     use_core_ebpf: bool = False
     log_level: str = "INFO"
@@ -43,9 +47,11 @@ class AgentShieldConfig:
     window_seconds: int = 60
     min_events: int = 5
     metrics_interval: int = 10
+    dashboard_refresh_seconds: int = 2
     protected_pids: List[int] = field(default_factory=lambda: [1])
     protected_processes: List[str] = field(default_factory=lambda: ["systemd", "sshd", "docker", "dockerd", "containerd", "init"])
     whitelisted_processes: List[str] = field(default_factory=lambda: ["systemd", "sshd", "docker", "dockerd", "containerd", "init"])
+    kill_on_signature_tags: List[str] = field(default_factory=lambda: ["reverse_shell", "dos"])
     signature_rules: SignatureRuleConfig = field(default_factory=SignatureRuleConfig)
     core_ebpf: CoreEbpfConfig = field(default_factory=CoreEbpfConfig)
 
@@ -65,6 +71,7 @@ class ConfigManager:
             return copy.deepcopy(self._config)
         data = self._load_yaml(self.path)
         self._config = self._coerce(data)
+        self._validate(self._config)
         self._mtime = current_mtime
         LOGGER.info("Loaded configuration from %s", self.path)
         return copy.deepcopy(self._config)
@@ -82,10 +89,30 @@ class ConfigManager:
         return self._minimal_yaml_parse(raw)
 
     def _coerce(self, data: Dict[str, Any]) -> AgentShieldConfig:
-        signature_rules = SignatureRuleConfig(**data.get("signature_rules", {}))
-        core_ebpf = CoreEbpfConfig(**data.get("core_ebpf", {}))
+        signature_rules = SignatureRuleConfig(**(data.get("signature_rules") or {}))
+        core_ebpf = CoreEbpfConfig(**(data.get("core_ebpf") or {}))
         payload = {key: value for key, value in data.items() if key not in {"signature_rules", "core_ebpf"}}
-        return AgentShieldConfig(signature_rules=signature_rules, core_ebpf=core_ebpf, **payload)
+        config = AgentShieldConfig(signature_rules=signature_rules, core_ebpf=core_ebpf, **payload)
+        config.anomaly_threshold = max(0.0, min(float(config.anomaly_threshold), 1.0))
+        config.collector_poll_interval = max(float(config.collector_poll_interval), 0.01)
+        config.window_seconds = max(int(config.window_seconds), 5)
+        config.min_events = max(int(config.min_events), 2)
+        config.metrics_interval = max(int(config.metrics_interval), 1)
+        config.dashboard_refresh_seconds = max(int(config.dashboard_refresh_seconds), 1)
+        config.signature_rules.reverse_shell_ports = [int(p) for p in config.signature_rules.reverse_shell_ports]
+        config.signature_rules.dos_connection_threshold = max(int(config.signature_rules.dos_connection_threshold), 10)
+        config.signature_rules.dos_unique_ip_threshold = max(int(config.signature_rules.dos_unique_ip_threshold), 5)
+        config.signature_rules.dos_byte_rate_threshold = max(int(config.signature_rules.dos_byte_rate_threshold), 10_000)
+        config.protected_pids = [int(p) for p in config.protected_pids]
+        config.kill_on_signature_tags = [str(tag).strip() for tag in config.kill_on_signature_tags if str(tag).strip()]
+        return config
+
+    def _validate(self, config: AgentShieldConfig) -> None:
+        allowed_levels = {"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"}
+        if config.log_level.upper() not in allowed_levels:
+            raise ValueError(f"log_level must be one of {sorted(allowed_levels)}")
+        if not config.protected_pids:
+            LOGGER.warning("protected_pids list is empty; this can be unsafe in production")
 
     @classmethod
     def _minimal_yaml_parse(cls, raw: str) -> Dict[str, Any]:
@@ -114,10 +141,7 @@ class ConfigManager:
                 idx += 1
                 continue
             next_indent, next_stripped = cls._peek_next(lines, idx)
-            if next_stripped.startswith("- ") and next_indent > indent:
-                new_container: Any = []
-            else:
-                new_container = {}
+            new_container: Any = [] if next_stripped.startswith("- ") and next_indent > indent else {}
             container[key] = new_container
             stack.append((indent, new_container))
             idx += 1

@@ -1,5 +1,14 @@
 __pycache__/
 *.pyc
+.venv/
+.venv-wsl/
+*.env
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
 agentshield/logs/*.log
 agentshield/logs/*.jsonl
 agentshield/ml_engine/*.joblib

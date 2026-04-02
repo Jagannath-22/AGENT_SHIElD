@@ -2,30 +2,7 @@
 
 from __future__ import annotations
 
-<<<<<<< ours
-<<<<<<< ours
-<<<<<<< ours
-<<<<<<< ours
-<<<<<<< ours
-<<<<<<< ours
-=======
 import hashlib
->>>>>>> theirs
-=======
-import hashlib
->>>>>>> theirs
-=======
-import hashlib
->>>>>>> theirs
-=======
-import hashlib
->>>>>>> theirs
-=======
-import hashlib
->>>>>>> theirs
-=======
-import hashlib
->>>>>>> theirs
 import json
 import logging
 import os
@@ -45,86 +22,31 @@ class ResponseEngine:
         self.webhook_url = webhook_url
         self.audit_log.parent.mkdir(parents=True, exist_ok=True)
 
-<<<<<<< ours
-<<<<<<< ours
-<<<<<<< ours
-<<<<<<< ours
-<<<<<<< ours
-<<<<<<< ours
-    def execute(self, decision, feature_vector, inference: dict, latest_event: dict) -> None:
-=======
-    def execute(self, decision, feature_vector, inference: dict, latest_event: dict, signature_match) -> None:
->>>>>>> theirs
-=======
-    def execute(self, decision, feature_vector, inference: dict, latest_event: dict, signature_match) -> None:
->>>>>>> theirs
-=======
-    def execute(self, decision, feature_vector, inference: dict, latest_event: dict, signature_match) -> None:
->>>>>>> theirs
-=======
-    def execute(self, decision, feature_vector, inference: dict, latest_event: dict, signature_match) -> None:
->>>>>>> theirs
-=======
-    def execute(self, decision, feature_vector, inference: dict, latest_event: dict, signature_match) -> None:
->>>>>>> theirs
-=======
-    def execute(self, decision, feature_vector, inference: dict, latest_event: dict, signature_match) -> None:
->>>>>>> theirs
+    def execute(self, decision, feature_vector, inference: dict, latest_event: dict, signature_match=None) -> None:
         record = {
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "decision": asdict(decision),
-            "pid": feature_vector.pid,
-            "process_name": feature_vector.process_name,
-<<<<<<< ours
-<<<<<<< ours
-<<<<<<< ours
-<<<<<<< ours
-<<<<<<< ours
-<<<<<<< ours
+            "pid": int(feature_vector.pid),
+            "process_name": str(feature_vector.process_name),
+            "context": getattr(feature_vector, "context", {}),
             "inference": inference,
+            "signature_detected": bool(getattr(signature_match, "detected", False)),
+            "signature_reasons": list(getattr(signature_match, "reasons", [])),
+            "signature_tags": list(getattr(signature_match, "tags", [])),
+            "signature_critical": bool(getattr(signature_match, "critical", False)),
             "latest_event": latest_event,
         }
-=======
-=======
->>>>>>> theirs
-=======
->>>>>>> theirs
-=======
->>>>>>> theirs
-=======
->>>>>>> theirs
-=======
->>>>>>> theirs
-            "context": feature_vector.context,
-            "inference": inference,
-            "signature_detected": signature_match.detected,
-            "signature_reasons": signature_match.reasons,
-            "latest_event": latest_event,
-        }
-        record["integrity_sha256"] = hashlib.sha256(json.dumps(record, sort_keys=True).encode("utf-8")).hexdigest()
-<<<<<<< ours
-<<<<<<< ours
-<<<<<<< ours
-<<<<<<< ours
-<<<<<<< ours
->>>>>>> theirs
-=======
->>>>>>> theirs
-=======
->>>>>>> theirs
-=======
->>>>>>> theirs
-=======
->>>>>>> theirs
-=======
->>>>>>> theirs
+        record["integrity_sha256"] = hashlib.sha256(
+            json.dumps(record, sort_keys=True, default=str).encode("utf-8")
+        ).hexdigest()
+
         self._append_audit(record)
         self._alert(record)
         if decision.action == "kill":
-            self._kill_process(feature_vector.pid, feature_vector.process_name)
+            self._kill_process(int(feature_vector.pid), str(feature_vector.process_name))
 
     def _append_audit(self, record: dict) -> None:
-        serialized = json.dumps(record, sort_keys=True)
+        serialized = json.dumps(record, sort_keys=True, default=str)
         with self.audit_log.open("a", encoding="utf-8") as handle:
             handle.write(serialized + "\n")
         try:
@@ -134,7 +56,12 @@ class ResponseEngine:
         LOGGER.info("Wrote audit record for pid=%s", record["pid"])
 
     def _alert(self, record: dict) -> None:
-        LOGGER.warning("AgentShield decision=%s pid=%s reasons=%s", record["decision"]["action"], record["pid"], record["decision"]["reasons"])
+        LOGGER.warning(
+            "AgentShield decision=%s pid=%s reasons=%s",
+            record["decision"]["action"],
+            record["pid"],
+            record["decision"]["reasons"],
+        )
         if not self.webhook_url:
             return
         body = json.dumps(record).encode("utf-8")
@@ -146,6 +73,9 @@ class ResponseEngine:
             LOGGER.error("Failed to send webhook alert: %s", exc)
 
     def _kill_process(self, pid: int, process_name: str) -> None:
+        if pid <= 1:
+            LOGGER.error("Refusing to kill protected pid=%s process=%s", pid, process_name)
+            return
         try:
             os.kill(pid, signal.SIGKILL)
             LOGGER.critical("Killed pid=%s process=%s", pid, process_name)

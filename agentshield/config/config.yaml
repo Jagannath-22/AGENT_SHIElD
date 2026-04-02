@@ -1,4 +1,4 @@
-anomaly_threshold: 0.2
+anomaly_threshold: 0.65
 kill_process: true
 use_core_ebpf: false
 log_level: INFO
@@ -7,6 +7,7 @@ collector_poll_interval: 0.1
 window_seconds: 60
 min_events: 5
 metrics_interval: 10
+dashboard_refresh_seconds: 2
 protected_pids:
   - 1
 protected_processes:
@@ -23,6 +24,9 @@ whitelisted_processes:
   - dockerd
   - containerd
   - init
+kill_on_signature_tags:
+  - reverse_shell
+  - dos
 signature_rules:
   reverse_shell_ports:
     - 4444
@@ -32,6 +36,10 @@ signature_rules:
     - 172.16.250.0/24
   rapid_connection_threshold: 20
   exfil_byte_rate_threshold: 100000
+  dos_connection_threshold: 60
+  dos_unique_ip_threshold: 25
+  dos_byte_rate_threshold: 250000
 core_ebpf:
   loader_path: ./agentshield/ebpf_core/loader
   object_path: ./agentshield/ebpf_core/monitor.bpf.o
+  expected_sha256: null
