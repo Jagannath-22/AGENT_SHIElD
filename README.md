@@ -112,3 +112,42 @@ Check generated logs:
 - [agentshield/logs/agentshield.jsonl](agentshield/logs/agentshield.jsonl)
 - [agentshield/logs/metrics.jsonl](agentshield/logs/metrics.jsonl)
 - [agentshield/logs/incidents.jsonl](agentshield/logs/incidents.jsonl)
+
+## Model Retraining
+
+AgentShield uses an Isolation Forest anomaly model and supports retraining from local logs.
+
+### One-command retrain
+
+```bash
+python -m agentshield.ml_engine.retrain --prefer auto --min-samples 50
+```
+
+This command:
+
+1. Loads feature rows from incidents (`agentshield/logs/incidents.jsonl`) and raw events (`agentshield/logs/agentshield.jsonl`)
+2. Picks the richer source (or one you force via `--prefer`)
+3. Exports the final retraining dataset to `agentshield/logs/retrain_dataset.jsonl`
+4. Retrains and saves the model at `agentshield/ml_engine/isolation_forest.joblib`
+
+### Useful options
+
+```bash
+python -m agentshield.ml_engine.retrain --prefer incidents --min-samples 100
+python -m agentshield.ml_engine.retrain --prefer events --contamination 0.03
+python -m agentshield.ml_engine.retrain --export-dataset agentshield/logs/my_dataset.jsonl
+```
+
+## RAG / Retrieve / Remember
+
+Current repository state:
+
+- No vector database or embedding-based retrieval pipeline is implemented yet.
+- No long-term memory module exists beyond JSONL log history.
+
+What is available now:
+
+- Structured event and incident history in `agentshield/logs/*.jsonl`
+- Retraining from those logs via the retrain CLI above
+
+If needed, a retrieval layer can be added later (for example: embed incident summaries and retrieve nearest historical matches during decisioning).
