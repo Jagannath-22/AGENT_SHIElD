@@ -27,6 +27,58 @@ In this repository, that loop is explicitly implemented in [agentshield/runtime/
 - Autonomous action/response: [agentshield/response_engine/response.py](agentshield/response_engine/response.py)
 - Runtime adaptation via config reload: [agentshield/config/settings.py](agentshield/config/settings.py)
 
+
+## Agentic Flow (Explained for Viva / College Demo)
+
+AgentShield is agentic because it continuously runs a closed loop and can take action without a manual operator.
+
+- **Sense**: Collector streams telemetry (eBPF when available, synthetic fallback otherwise).
+- **Think**: Feature engine builds behavior windows; ML model scores anomaly; signature engine checks known threat patterns.
+- **Decide**: Decision engine applies threshold/policy and outputs `allow` / `alert` / `kill`.
+- **Act**: Response engine executes containment and writes forensic incident records.
+- **Adapt**: Config manager can reload policy at runtime; model can be retrained from fresh telemetry.
+
+This maps directly to:
+- Agent loop orchestrator: `agentshield/runtime/agent_runtime.py`
+- Sensing: `agentshield/collector/collector.py`
+- Thinking: `agentshield/feature_engine/features.py`, `agentshield/ml_engine/model.py`, `agentshield/signature_engine/signatures.py`
+- Deciding: `agentshield/decision_engine/decision.py`
+- Acting: `agentshield/response_engine/response.py`
+
+## End-to-End Training + Tuning (Local + Public Dataset)
+
+### 1) Generate local telemetry baseline
+
+```bash
+timeout 35s python main.py
+```
+
+### 2) Retrain on local telemetry features
+
+```bash
+python -m agentshield.ml_engine.retrain --prefer auto --min-samples 50
+```
+
+### 3) Convert CIC/public CSV into AgentShield feature JSONL
+
+```bash
+python -m agentshield.ml_engine.dataset_converter   --input-csv path/to/cic.csv   --output-jsonl agentshield/logs/public_eval.jsonl   --dataset-name cic_ids2017   --label-column Label
+```
+
+### 4) Evaluate the model on labeled data
+
+```bash
+python -m agentshield.ml_engine.evaluate   --dataset agentshield/logs/public_eval.jsonl   --label-key __is_attack
+```
+
+### 5) Tune threshold (important for low false positives)
+
+```bash
+python -m agentshield.ml_engine.tune_threshold   --dataset agentshield/logs/public_eval.jsonl   --label-key __is_attack   --max-fpr 0.10
+```
+
+Use the suggested threshold in `agentshield/config/config.yaml` (`anomaly_threshold`).
+
 ## Architecture
 
 - eBPF BCC path (fallback-compatible): [agentshield/ebpf](agentshield/ebpf)

@@ -145,6 +145,11 @@ The following utilities are now implemented:
 
 - `python -m agentshield.runtime.query_memory --query "reverse shell 4444" --k 5`
 
+
+4. Threshold tuner:
+
+- `python -m agentshield.ml_engine.tune_threshold --dataset agentshield/logs/public_eval.jsonl --label-key __is_attack --max-fpr 0.10`
+
 ## Metric Meaning (to know it is real, not random)
 
 Use these together, not one metric alone:
