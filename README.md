@@ -125,6 +125,22 @@ If kernel hooks are unavailable, AgentShield automatically falls back to synthet
 streamlit run agentshield/dashboard/app.py
 ```
 
+### 5. One-command dashboard launcher (recommended)
+
+```bash
+python -m agentshield.dashboard.run_dashboard
+```
+
+This helper starts Streamlit, checks `/_stcore/health`, and auto-opens the dashboard URL in your default browser.
+
+For VS Code Dev Containers / remote terminals:
+
+```bash
+python -m agentshield.dashboard.run_dashboard --dev-mode --port 8501
+```
+
+Then forward/open port `8501` in VS Code and open the provided URL.
+
 ## CO-RE Build (Optional)
 
 ```bash
